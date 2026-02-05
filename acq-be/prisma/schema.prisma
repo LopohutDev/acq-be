@@ -1,0 +1,215 @@
+// This is your Prisma schema file,
+// learn more about it in docs: https://pris.ly/d/prisma-client
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserType {
+  RENTER  // User looking to rent parking spaces
+  OWNER  // User offering parking spaces for rent
+  BOTH  // User who both rents and offers spaces
+}
+
+enum ParkingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  INACTIVE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum EmailType {
+  BOOKING_CONFIRMATION
+  BOOKING_REMINDER
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  PMO_REQUEST
+  CUSTOM
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  password String
+  firstName String @map("first_name")
+  lastName String @map("last_name")
+  phone String?
+  role UserRole @default(USER)
+  userType UserType? @map("user_type")
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  parkingSpots ParkingSpot[]
+  bookings Booking[]
+  clientEmailAccounts ClientEmailAccount[]
+
+  @@map("users")
+}
+
+model ParkingSpot {
+  id String @id @default(uuid())
+  title String
+  description String?
+  address String
+  city String
+  zipCode String @map("zip_code")
+  latitude Float?
+  longitude Float?
+  pricePerHour Float @map("price_per_hour")
+  images String[] @default([])
+  status ParkingStatus @default(PENDING)
+  rejectionReason String? @map("rejection_reason")
+  ownerId String @map("owner_id")
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  bookings Booking[]
+
+  @@map("parking_spots")
+}
+
+model Booking {
+  id String @id @default(uuid())
+  startTime DateTime @map("start_time")
+  endTime DateTime @map("end_time")
+  totalPrice Float @map("total_price")
+  status BookingStatus @default(PENDING)
+  notes String?
+  parkingSpotId String @map("parking_spot_id")
+  userId String @map("user_id")
+  parkingSpot ParkingSpot @relation(fields: [parkingSpotId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payment Payment?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("bookings")
+}
+
+model Payment {
+  id String @id @default(uuid())
+  referenceNumber String @unique @map("reference_number")
+  amount Int // Amount in centavos
+  currency String @default("PHP")
+  status PaymentStatus @default(PENDING)
+  description String?
+  checkoutUrl String? @map("checkout_url")
+  externalId String? @map("external_id")
+  paymentMethod String? @map("payment_method")
+  metadata Json?
+  bookingId String @unique @map("booking_id")
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("payments")
+}
+
+model WebhookEvent {
+  id String @id @default(uuid())
+  eventId String @unique @map("event_id")
+  processedAt DateTime @default(now()) @map("processed_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("webhook_events")
+}
+
+
+
+model ClientEmailAccount {
+  id String @id @default(uuid())
+  email String @unique
+  isActive Boolean @default(true) @map("is_active")
+  dailySent Int @default(0) @map("daily_sent")
+  dailyLimit Int @default(100) @map("daily_limit")
+  rotationEnabled Boolean @default(true) @map("rotation_enabled")
+  poolPosition Int @default(0) @map("pool_position")
+  lastEmailSentAt DateTime? @map("last_email_sent_at")
+  accessToken String? @map("access_token")
+  refreshToken String? @map("refresh_token")
+  provider String @default("gmail")
+  pmolRecipientEmail String? @map("pmo_recipient_email") // PMO email for this account
+  clientId String? @unique @default(uuid()) @map("client_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  owner User? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  @@map("client_email_accounts")
+}
+
+model Email {
+  id String @id @default(uuid())
+  toEmail String @map("to_email")
+  subject String
+  template EmailType @map("template_type")
+  htmlContent String? @map("html_content")
+  textContent String? @map("text_content")
+  messageId String? @map("message_id")
+  status EmailStatus @default(PENDING)
+  errorMessage String? @map("error_message")
+  sentAt DateTime? @map("sent_at")
+  bookingId String? @map("booking_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("emails")
+}
+
+model EmailTemplate {
+  id String @id @default(uuid())
+  name String
+  subject String
+  bodyHtml String @map("body_html")
+  bodyText String @map("body_text")
+  templateType EmailType @map("template_type")
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("email_templates")
+}
+
+model EmailLog {
+  id String @id @default(uuid())
+  pmoAccountId String @map("pmo_account_id")
+  templateId String? @map("template_id")
+  recipientEmail String @map("recipient_email")
+  subject String
+  status EmailStatus @default(PENDING)
+  errorMessage String? @map("error_message")
+  sentAt DateTime? @map("sent_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("email_logs")
+}
