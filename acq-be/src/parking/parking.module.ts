@@ -8,4 +8,3 @@ import { ParkingController } from './parking.controller';
   exports: [ParkingService],
 })
 export class ParkingModule {}
-

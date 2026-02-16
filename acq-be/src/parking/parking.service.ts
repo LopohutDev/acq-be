@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateParkingDto } from './dto/create-parking.dto';
 import { UpdateParkingDto } from './dto/update-parking.dto';
@@ -9,17 +9,77 @@ import { ParkingStatus } from '@prisma/client';
 export class ParkingService {
   constructor(private prisma: PrismaService) {}
 
+  private async getPlatformSettings() {
+    let settings = await this.prisma.platformSettings.findFirst();
+    if (!settings) {
+      settings = await this.prisma.platformSettings.create({
+        data: { requireAddressForParking: true },
+      });
+    }
+    return settings;
+  }
+
   async create(createParkingDto: CreateParkingDto, images: string[] = []) {
     if (!createParkingDto.ownerId) {
       throw new Error('Owner ID is required');
     }
 
+    const platformSettings = await this.getPlatformSettings();
+
+    if (platformSettings.requireAddressForParking) {
+      if (!createParkingDto.address) {
+        throw new BadRequestException('Address is required for parking spots');
+      }
+      if (!createParkingDto.city) {
+        throw new BadRequestException('City is required for parking spots');
+      }
+      if (!createParkingDto.zipCode) {
+        throw new BadRequestException('ZIP Code is required for parking spots');
+      }
+    }
+
+    const data: any = {
+      tower: createParkingDto.tower,
+      slotNumber: createParkingDto.slotNumber,
+      ownerId: createParkingDto.ownerId,
+      pricePerHour: createParkingDto.pricePerHour,
+      images,
+    };
+
+    if (createParkingDto.address) {
+      data.address = createParkingDto.address;
+    }
+
+    if (createParkingDto.city) {
+      data.city = createParkingDto.city;
+    }
+
+    if (createParkingDto.zipCode) {
+      data.zipCode = createParkingDto.zipCode;
+    }
+
+    if (!createParkingDto.address && !platformSettings?.requireAddressForParking) {
+      data.address = '1550 Coronado St., Brgy. Hulo, Mandaluyong City, 1550 Metro Manila, Philippines';
+      if (!createParkingDto.city) {
+        data.city = 'Mandaluyong City';
+      }
+      if (!createParkingDto.zipCode) {
+        data.zipCode = '1550';
+      }
+    }
+
+    if (createParkingDto.latitude) {
+      data.latitude = createParkingDto.latitude;
+    }
+    if (createParkingDto.longitude) {
+      data.longitude = createParkingDto.longitude;
+    }
+    if (createParkingDto.pricePerDay) {
+      data.pricePerDay = createParkingDto.pricePerDay;
+    }
+
     return this.prisma.parkingSpot.create({
-      data: {
-        ...createParkingDto,
-        ownerId: createParkingDto.ownerId,
-        images,
-      },
+      data,
       include: {
         owner: {
           select: {
@@ -55,7 +115,7 @@ export class ParkingService {
         },
       }),
       this.prisma.parkingSpot.count({ where }),
-    ]);
+      ]);
 
     return {
       parkingSpots,
@@ -94,9 +154,54 @@ export class ParkingService {
   async update(id: string, updateParkingDto: UpdateParkingDto) {
     await this.findOne(id);
 
+    const platformSettings = await this.getPlatformSettings();
+
+    const updateData: any = {};
+
+    if (updateParkingDto.tower !== undefined) {
+      updateData.tower = updateParkingDto.tower;
+    }
+    if (updateParkingDto.slotNumber !== undefined) {
+      updateData.slotNumber = updateParkingDto.slotNumber;
+    }
+
+    if (platformSettings.requireAddressForParking) {
+      if (updateParkingDto.address !== undefined && !updateParkingDto.address) {
+        throw new BadRequestException('Address is required for parking spots');
+      }
+      if (updateParkingDto.city !== undefined && !updateParkingDto.city) {
+        throw new BadRequestException('City is required for parking spots');
+      }
+      if (updateParkingDto.zipCode !== undefined && !updateParkingDto.zipCode) {
+        throw new BadRequestException('ZIP Code is required for parking spots');
+      }
+    }
+
+    if (updateParkingDto.address !== undefined) {
+      updateData.address = updateParkingDto.address;
+    }
+    if (updateParkingDto.city !== undefined) {
+      updateData.city = updateParkingDto.city;
+    }
+    if (updateParkingDto.zipCode !== undefined) {
+      updateData.zipCode = updateParkingDto.zipCode;
+    }
+    if (updateParkingDto.latitude !== undefined) {
+      updateData.latitude = updateParkingDto.latitude;
+    }
+    if (updateParkingDto.longitude !== undefined) {
+      updateData.longitude = updateParkingDto.longitude;
+    }
+    if (updateParkingDto.pricePerHour !== undefined) {
+      updateData.pricePerHour = updateParkingDto.pricePerHour;
+    }
+    if (updateParkingDto.pricePerDay !== undefined) {
+      updateData.pricePerDay = updateParkingDto.pricePerDay;
+    }
+
     return this.prisma.parkingSpot.update({
       where: { id },
-      data: updateParkingDto,
+      data: updateData,
       include: {
         owner: {
           select: {

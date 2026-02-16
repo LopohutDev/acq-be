@@ -10,8 +10,10 @@ export class QuickFixController {
   async forcePaymentUpdate(@Body() body: { referenceNumber: string }) {
     try {
       // Force refresh from Experia PG API
-      const payment = await this.paymentService.getPaymentStatus(body.referenceNumber);
-      
+      const payment = await this.paymentService.getPaymentStatus(
+        body.referenceNumber,
+      );
+
       return {
         success: true,
         message: 'Payment status refreshed from Experia PG',

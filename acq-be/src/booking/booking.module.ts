@@ -11,4 +11,3 @@ import { PaymentModule } from '../payment/payment.module';
   exports: [BookingService],
 })
 export class BookingModule {}
-

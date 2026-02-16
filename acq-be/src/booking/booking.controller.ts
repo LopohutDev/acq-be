@@ -42,12 +42,17 @@ export class BookingController {
     return this.bookingService.cancel(id, req.user.id);
   }
 
+  @Patch(':id/dev-cancel')
+  devCancel(@Request() req, @Param('id') id: string) {
+    return this.bookingService.devCancel(id, req.user.id);
+  }
+
   @Post(':id/pay')
   @UseGuards(JwtAuthGuard)
   async initiatePayment(@Request() req, @Param('id') id: string) {
     // Get booking details
     const booking = await this.bookingService.findOne(id, req.user.id);
-    
+
     if (booking.userId !== req.user.id) {
       throw new BadRequestException('You can only pay for your own bookings');
     }
@@ -72,7 +77,7 @@ export class BookingController {
       customerEmail: req.user.email,
       customerName: `${req.user.firstName} ${req.user.lastName}`,
       customerPhone: req.user.phone || '',
-      description: `Parking booking for ${booking.parkingSpot.title}`,
+      description: `Parking booking for ${booking.parkingSpot.tower} - ${booking.parkingSpot.slotNumber}`,
     });
 
     return {
@@ -85,4 +90,3 @@ export class BookingController {
     };
   }
 }
-

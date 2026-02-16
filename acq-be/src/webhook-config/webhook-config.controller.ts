@@ -11,7 +11,7 @@ export class WebhookConfigController {
     const webhookUrl = `${process.env.FRONTEND_URL || 'http://localhost:8081'}/api/webhooks/experia`;
     const apiKey = process.env.EXPERIA_PG_API_KEY;
     const webhookSecret = process.env.EXPERIA_PG_WEBHOOK_SECRET;
-    
+
     return {
       success: true,
       webhookUrl,
@@ -23,12 +23,14 @@ export class WebhookConfigController {
         '4. Paste the webhook URL in the webhook URL field',
         '5. Set webhook secret (optional)',
         '6. Save and test the webhook',
-        '7. Your webhooks will fire when payments complete'
+        '7. Your webhooks will fire when payments complete',
       ],
       apiKeySet: !!apiKey,
       apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'not set',
       webhookSecretSet: !!webhookSecret,
-      webhookSecretConfigured: webhookSecret ? webhookSecret.substring(0, 10) + '...' : 'not set',
+      webhookSecretConfigured: webhookSecret
+        ? webhookSecret.substring(0, 10) + '...'
+        : 'not set',
       currentEnvironment: process.env.NODE_ENV || 'development',
       environment: {
         development: {
@@ -38,8 +40,8 @@ export class WebhookConfigController {
           instructions: [
             'Start ngrok: `ngrok http 3000`',
             'Copy the ngrok URL',
-            'Use the ngrok URL as your webhook URL in Experia PG dashboard'
-          ]
+            'Use the ngrok URL as your webhook URL in Experia PG dashboard',
+          ],
         },
         production: {
           frontendUrl: process.env.FRONTEND_URL,
@@ -47,10 +49,10 @@ export class WebhookConfigController {
           instructions: [
             'Ensure your domain has SSL certificate',
             'Set this URL in Experia PG webhook configuration',
-            'Test with a real payment to verify webhook is working'
-          ]
-        }
-      }
+            'Test with a real payment to verify webhook is working',
+          ],
+        },
+      },
     };
   }
 
@@ -62,7 +64,7 @@ export class WebhookConfigController {
     } catch (error) {
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }

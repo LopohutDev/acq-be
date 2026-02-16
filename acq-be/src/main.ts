@@ -33,7 +33,10 @@ async function bootstrap() {
   });
 
   // Configure raw body parser for webhooks
-  app.use('/payments/webhooks/experia', express.raw({ type: 'application/json' }));
+  app.use(
+    '/payments/webhooks/experia',
+    express.raw({ type: 'application/json' }),
+  );
 
   // Enable validation pipes globally
   app.useGlobalPipes(

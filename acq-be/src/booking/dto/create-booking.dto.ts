@@ -1,4 +1,9 @@
-import { IsString, IsNotEmpty, IsDateString, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsDateString,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateBookingDto {
   @IsString()
@@ -17,4 +22,3 @@ export class CreateBookingDto {
   @IsOptional()
   notes?: string;
 }
-

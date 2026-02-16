@@ -23,7 +23,9 @@ export class BookingService {
     }
 
     if (parkingSpot.status !== ParkingStatus.APPROVED) {
-      throw new BadRequestException('Parking spot is not available for booking');
+      throw new BadRequestException(
+        'Parking spot is not available for booking',
+      );
     }
 
     // Cannot book own parking spot
@@ -43,11 +45,14 @@ export class BookingService {
       throw new BadRequestException('Start time must be in the future');
     }
 
-    // Check for overlapping bookings
+    // Check for overlapping bookings (only active bookings)
     const overlappingBooking = await this.prisma.booking.findFirst({
       where: {
         parkingSpotId: createBookingDto.parkingSpotId,
         status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+        NOT: {
+          status: { in: [BookingStatus.CANCELLED, BookingStatus.COMPLETED] }
+        },
         OR: [
           {
             startTime: { lte: startTime },
@@ -87,7 +92,12 @@ export class BookingService {
         parkingSpot: {
           include: {
             owner: {
-              select: { id: true, firstName: true, lastName: true, email: true },
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
             },
           },
         },
@@ -105,7 +115,12 @@ export class BookingService {
         parkingSpot: {
           include: {
             owner: {
-              select: { id: true, firstName: true, lastName: true, email: true },
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
             },
           },
         },
@@ -125,7 +140,12 @@ export class BookingService {
         parkingSpot: {
           include: {
             owner: {
-              select: { id: true, firstName: true, lastName: true, email: true },
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
             },
           },
         },
@@ -163,10 +183,52 @@ export class BookingService {
       throw new BadRequestException('Cannot cancel a completed booking');
     }
 
+    // If payment exists and is still PENDING, cancel it as well
+    if (booking.payment) {
+      const payment = await this.prisma.payment.findUnique({
+        where: { bookingId: id }
+      });
+
+      if (payment && payment.status === PaymentStatus.PENDING) {
+        await this.prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.CANCELLED }
+        });
+      }
+    }
+
+    return this.prisma.booking.update({
+      where: { id },
+      data: { status: BookingStatus.CANCELLED },
+    });
+  }
+
+  async devCancel(id: string, userId: string) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new BadRequestException('Dev cancel is only available in development mode');
+    }
+
+    const booking = await this.findOne(id, userId);
+
+    if (booking.userId !== userId) {
+      throw new BadRequestException('You can only cancel your own bookings');
+    }
+
+    if (booking.status === BookingStatus.CANCELLED) {
+      throw new BadRequestException('Booking is already cancelled');
+    }
+
+    // Cancel payment if exists (regardless of status)
+    if (booking.payment) {
+      await this.prisma.payment.update({
+        where: { bookingId: id },
+        data: { status: PaymentStatus.CANCELLED }
+      });
+    }
+
     return this.prisma.booking.update({
       where: { id },
       data: { status: BookingStatus.CANCELLED },
     });
   }
 }
-

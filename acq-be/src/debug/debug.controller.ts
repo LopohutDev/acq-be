@@ -10,11 +10,12 @@ export class DebugController {
   async checkPaymentStatus(@Query('reference') reference: string) {
     try {
       // Check local database first
-      const localPayment = await this.paymentService.getPaymentByReferenceNumber(reference);
-      
+      const localPayment =
+        await this.paymentService.getPaymentByReferenceNumber(reference);
+
       // Check Experia PG API
       const apiPayment = await this.paymentService.getPaymentStatus(reference);
-      
+
       return {
         success: true,
         localPayment,
@@ -39,10 +40,20 @@ export class DebugController {
           booking: {
             include: {
               user: {
-                select: { id: true, firstName: true, lastName: true, email: true },
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                },
               },
               parkingSpot: {
-                select: { id: true, title: true, address: true },
+                select: {
+                  id: true,
+                  tower: true,
+                  slotNumber: true,
+                  address: true,
+                },
               },
             },
           },

@@ -6,4 +6,3 @@ export class UpdateBookingDto {
   @IsOptional()
   status?: BookingStatus;
 }
-

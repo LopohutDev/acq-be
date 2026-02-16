@@ -132,7 +132,6 @@ export class PaymentService {
       metadata: {
         bookingId: bookingData.bookingId,
         type: 'parking_booking',
-        callbackUrl: `${process.env.FRONTEND_URL || 'http://localhost:8080'}/payment/callback?reference={referenceNumber}`,
       },
     };
 

@@ -42,7 +42,10 @@ export class AdminController {
   }
 
   @Patch('users/:id/role')
-  updateUserRole(@Param('id') id: string, @Body() updateUserRoleDto: UpdateUserRoleDto) {
+  updateUserRole(
+    @Param('id') id: string,
+    @Body() updateUserRoleDto: UpdateUserRoleDto,
+  ) {
     return this.adminService.updateUserRole(id, updateUserRoleDto.role);
   }
 
@@ -57,4 +60,3 @@ export class AdminController {
     return this.adminService.deleteUser(id);
   }
 }
-

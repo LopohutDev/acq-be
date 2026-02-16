@@ -4,29 +4,47 @@ import {
   IsNumber,
   IsOptional,
   Min,
+  ValidatorConstraint,
+  ValidationOptions,
+  Validate,
+  ValidationArguments,
+  ValidatorConstraintInterface,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
+@ValidatorConstraint({ name: 'hasPricing', async: false })
+export class HasPricingConstraint implements ValidatorConstraintInterface {
+  validate(value: any, args: ValidationArguments) {
+    const object = args.object as CreateParkingDto;
+    return !!object.pricePerHour || !!object.pricePerDay;
+  }
+
+  defaultMessage(args: ValidationArguments) {
+    return 'Either price per hour or price per day must be provided';
+  }
+}
+
 export class CreateParkingDto {
+  @Validate(HasPricingConstraint)
   @IsString()
   @IsNotEmpty()
-  title: string;
+  tower: string;
+
+  @IsString()
+  @IsNotEmpty()
+  slotNumber: string;
 
   @IsString()
   @IsOptional()
-  description?: string;
+  address?: string;
 
   @IsString()
-  @IsNotEmpty()
-  address: string;
+  @IsOptional()
+  city?: string;
 
   @IsString()
-  @IsNotEmpty()
-  city: string;
-
-  @IsString()
-  @IsNotEmpty()
-  zipCode: string;
+  @IsOptional()
+  zipCode?: string;
 
   @Transform(({ value }) =>
     value === '' || value === null || value === undefined
@@ -46,10 +64,25 @@ export class CreateParkingDto {
   @IsOptional()
   longitude?: number;
 
-  @Transform(({ value }) => parseFloat(value))
+  @Transform(({ value }) =>
+    value === '' || value === null || value === undefined
+      ? undefined
+      : parseFloat(value),
+  )
   @IsNumber()
+  @IsOptional()
   @Min(0)
-  pricePerHour: number;
+  pricePerHour?: number;
+
+  @Transform(({ value }) =>
+    value === '' || value === null || value === undefined
+      ? undefined
+      : parseFloat(value),
+  )
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  pricePerDay?: number;
 
   @IsString()
   @IsOptional()

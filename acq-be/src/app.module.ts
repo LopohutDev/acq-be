@@ -15,6 +15,8 @@ import { HealthModule } from './health/health.module';
 import { DebugModule } from './debug/debug.module';
 import { QuickFixModule } from './quick-fix/quick-fix.module';
 import { WebhookConfigModule } from './webhook-config/webhook-config.module';
+import { PlatformSettingsModule } from './platform-settings/platform-settings.module';
+import { GmailModule } from './gmail/gmail.module';
 // import { EmailModule } from './email/email.module';
 // import { PMOModule } from './pmo/pmo.module';
 // import { EmailAccountModule } from './email/email-account.module';
@@ -43,12 +45,15 @@ import { WebhookConfigModule } from './webhook-config/webhook-config.module';
     ParkingModule,
     BookingModule,
     PaymentModule,
+    PlatformSettingsModule,
+    GmailModule,
     // EmailModule,
     // PMOModule,
     // EmailAccountModule,
     HealthModule,
     DebugModule,
     QuickFixModule,
+    WebhookConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService],

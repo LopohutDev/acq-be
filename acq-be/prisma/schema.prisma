@@ -67,6 +67,15 @@ model User {
   role UserRole @default(USER)
   userType UserType? @map("user_type")
   isActive Boolean @default(true) @map("is_active")
+  bio String?
+  profilePicture String? @map("profile_picture")
+  isBusinessClient Boolean @default(false) @map("is_business_client")
+  businessName String? @map("business_name")
+  businessWebsite String? @map("business_website")
+  businessAddress String? @map("business_address")
+  businessDescription String? @map("business_description")
+  industryType String? @map("industry_type")
+  employeeCount Int @default(0) @map("employee_count")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   parkingSpots ParkingSpot[]
@@ -78,14 +87,15 @@ model User {
 
 model ParkingSpot {
   id String @id @default(uuid())
-  title String
-  description String?
-  address String
-  city String
-  zipCode String @map("zip_code")
+  tower String
+  slotNumber String @map("slot_number")
+  address String?
+  city String?
+  zipCode String? @map("zip_code")
   latitude Float?
   longitude Float?
   pricePerHour Float @map("price_per_hour")
+  pricePerDay Float? @map("price_per_day")
   images String[] @default([])
   status ParkingStatus @default(PENDING)
   rejectionReason String? @map("rejection_reason")
@@ -142,6 +152,14 @@ model WebhookEvent {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("webhook_events")
+}
+
+model PlatformSettings {
+  id String @id @default(uuid())
+  requireAddressForParking Boolean @default(true) @map("require_address_for_parking")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
 }
 
 

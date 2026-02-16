@@ -13,4 +13,3 @@ export class ApproveParkingDto {
   @IsOptional()
   rejectionReason?: string;
 }
-

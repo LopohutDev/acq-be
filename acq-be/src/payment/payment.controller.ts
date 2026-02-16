@@ -175,16 +175,22 @@ export class PaymentController {
           'Webhook secret not configured - skipping signature verification',
         );
       } else if (signature === 'test') {
-        this.logger.log('🧪 Using test webhook signature - skipping verification');
+        this.logger.log(
+          '🧪 Using test webhook signature - skipping verification',
+        );
       }
 
       const event = JSON.parse(body?.toString() || '{}');
-      
+
       // Log the actual webhook structure for debugging
-      this.logger.log('Webhook event structure:', JSON.stringify(event, null, 2));
+      this.logger.log(
+        'Webhook event structure:',
+        JSON.stringify(event, null, 2),
+      );
 
       // Updated structure based on actual payload
-      const eventId = event.data?.transactionId || event.data?.fullOrderRef || 'no-id';
+      const eventId =
+        event.data?.transactionId || event.data?.fullOrderRef || 'no-id';
       const eventType = event.event; // 'payment.completed'
       const paymentData = event.data; // Contains the payment details
 
@@ -227,7 +233,9 @@ export class PaymentController {
       switch (eventType) {
         case 'payment.completed':
           newStatus = paymentData.status; // Use status from payload: SUCCEEDED, FAILED, etc.
-          this.logger.log(`Payment ${newStatus}: ${paymentData.fullOrderRef} (${paymentData.amount / 100} PHP)`);
+          this.logger.log(
+            `Payment ${newStatus}: ${paymentData.fullOrderRef} (${paymentData.amount / 100} PHP)`,
+          );
           break;
         case 'payment.failed':
           newStatus = 'FAILED';
@@ -245,7 +253,7 @@ export class PaymentController {
       // Update payment status and booking status
       await this.paymentStatusService.updatePaymentStatusFromAPI(
         payment.referenceNumber,
-        newStatus
+        newStatus,
       );
 
       this.logger.log(
