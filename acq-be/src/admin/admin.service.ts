@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserRole, ParkingStatus } from '@prisma/client';
+import { EmailLogService } from '../email-log/email-log.service';
+import { UserRole, ParkingStatus, EmailStatus } from '@prisma/client';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailLogService: EmailLogService,
+  ) {}
 
   // Dashboard Statistics
   async getDashboardStats() {
@@ -150,5 +154,52 @@ export class AdminService {
     await this.prisma.user.delete({ where: { id } });
 
     return { message: 'User deleted successfully' };
+  }
+
+  // Email Monitoring
+  async getEmailStats() {
+    return this.emailLogService.getStats();
+  }
+
+  async getAllEmails(params: {
+    page: number;
+    limit: number;
+    status?: EmailStatus;
+    userId?: string;
+    search?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }) {
+    const skip = (params.page - 1) * params.limit;
+
+    const { data, total } = await this.emailLogService.findAll({
+      skip,
+      take: params.limit,
+      status: params.status,
+      userId: params.userId,
+      search: params.search,
+      startDate: params.startDate,
+      endDate: params.endDate,
+    });
+
+    return {
+      emails: data,
+      pagination: {
+        total,
+        page: params.page,
+        limit: params.limit,
+        totalPages: Math.ceil(total / params.limit),
+      },
+    };
+  }
+
+  async getEmailById(id: string) {
+    const email = await this.emailLogService.findOne(id);
+
+    if (!email) {
+      throw new NotFoundException(`Email with ID ${id} not found`);
+    }
+
+    return email;
   }
 }

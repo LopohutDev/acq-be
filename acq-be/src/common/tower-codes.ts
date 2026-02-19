@@ -1,10 +1,10 @@
 export const TOWER_CODE_MAP = {
-  'Sutherland': 'STH',
-  'Niagara': 'NIA',
-  'Iguazu': 'IGZ',
-  'Novotel': 'NOVO',
-  'Livingstone': 'LVS',
-  'Dettifoss': 'DTF',
+  Sutherland: 'STH',
+  Niagara: 'NIA',
+  Iguazu: 'IGZ',
+  Novotel: 'NOVO',
+  Livingstone: 'LVS',
+  Dettifoss: 'DTF',
 } as const;
 
 export const TOWER_NAMES = Object.keys(TOWER_CODE_MAP);
@@ -14,7 +14,9 @@ export function getTowerCode(towerName: string): string {
 }
 
 export function getTowerName(towerCode: string): string {
-  const entry = Object.entries(TOWER_CODE_MAP).find(([_, code]) => code === towerCode);
+  const entry = Object.entries(TOWER_CODE_MAP).find(
+    ([_, code]) => code === towerCode,
+  );
   return entry ? entry[0] : towerCode;
 }
 

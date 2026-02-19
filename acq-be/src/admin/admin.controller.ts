@@ -14,7 +14,7 @@ import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { UserRole, EmailStatus } from '@prisma/client';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 
 @Controller('admin')
@@ -58,5 +58,36 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   deleteUser(@Param('id') id: string) {
     return this.adminService.deleteUser(id);
+  }
+
+  @Get('emails/stats')
+  getEmailStats() {
+    return this.adminService.getEmailStats();
+  }
+
+  @Get('emails')
+  getAllEmails(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
+    @Query('status') status?: EmailStatus,
+    @Query('userId') userId?: string,
+    @Query('search') search?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.adminService.getAllEmails({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      status,
+      userId,
+      search,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    });
+  }
+
+  @Get('emails/:id')
+  getEmailById(@Param('id') id: string) {
+    return this.adminService.getEmailById(id);
   }
 }

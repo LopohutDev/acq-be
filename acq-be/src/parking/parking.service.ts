@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateParkingDto } from './dto/create-parking.dto';
 import { UpdateParkingDto } from './dto/update-parking.dto';
@@ -58,8 +62,12 @@ export class ParkingService {
       data.zipCode = createParkingDto.zipCode;
     }
 
-    if (!createParkingDto.address && !platformSettings?.requireAddressForParking) {
-      data.address = '1550 Coronado St., Brgy. Hulo, Mandaluyong City, 1550 Metro Manila, Philippines';
+    if (
+      !createParkingDto.address &&
+      !platformSettings?.requireAddressForParking
+    ) {
+      data.address =
+        '1550 Coronado St., Brgy. Hulo, Mandaluyong City, 1550 Metro Manila, Philippines';
       if (!createParkingDto.city) {
         data.city = 'Mandaluyong City';
       }
@@ -115,7 +123,7 @@ export class ParkingService {
         },
       }),
       this.prisma.parkingSpot.count({ where }),
-      ]);
+    ]);
 
     return {
       parkingSpots,

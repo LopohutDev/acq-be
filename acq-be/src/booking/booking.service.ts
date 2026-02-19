@@ -51,7 +51,7 @@ export class BookingService {
         parkingSpotId: createBookingDto.parkingSpotId,
         status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
         NOT: {
-          status: { in: [BookingStatus.CANCELLED, BookingStatus.COMPLETED] }
+          status: { in: [BookingStatus.CANCELLED, BookingStatus.COMPLETED] },
         },
         OR: [
           {
@@ -84,9 +84,14 @@ export class BookingService {
         endTime,
         totalPrice,
         notes: createBookingDto.notes,
+        vehiclePlateNumber: createBookingDto.vehiclePlateNumber,
+        vehicleModel: createBookingDto.vehicleModel,
+        vehicleColor: createBookingDto.vehicleColor,
+        tower: createBookingDto.tower,
+        unitNumber: createBookingDto.unitNumber,
         parkingSpotId: createBookingDto.parkingSpotId,
         userId,
-        status: BookingStatus.PENDING, // Changed to PENDING - will be CONFIRMED after payment
+        status: BookingStatus.PENDING,
       },
       include: {
         parkingSpot: {
@@ -124,12 +129,28 @@ export class BookingService {
             },
           },
         },
-        payment: true, // Include payment data to show payment status
+        payment: true,
         user: {
           select: { id: true, firstName: true, lastName: true, email: true },
         },
       },
       orderBy: { id: 'desc' },
+    });
+  }
+
+  async findByParkingSpot(parkingSpotId: string) {
+    return this.prisma.booking.findMany({
+      where: {
+        parkingSpotId,
+        status: { in: ['PENDING', 'CONFIRMED'] },
+      },
+      select: {
+        id: true,
+        startTime: true,
+        endTime: true,
+        status: true,
+      },
+      orderBy: { startTime: 'asc' },
     });
   }
 
@@ -186,13 +207,13 @@ export class BookingService {
     // If payment exists and is still PENDING, cancel it as well
     if (booking.payment) {
       const payment = await this.prisma.payment.findUnique({
-        where: { bookingId: id }
+        where: { bookingId: id },
       });
 
       if (payment && payment.status === PaymentStatus.PENDING) {
         await this.prisma.payment.update({
           where: { id: payment.id },
-          data: { status: PaymentStatus.CANCELLED }
+          data: { status: PaymentStatus.CANCELLED },
         });
       }
     }
@@ -205,7 +226,9 @@ export class BookingService {
 
   async devCancel(id: string, userId: string) {
     if (process.env.NODE_ENV === 'production') {
-      throw new BadRequestException('Dev cancel is only available in development mode');
+      throw new BadRequestException(
+        'Dev cancel is only available in development mode',
+      );
     }
 
     const booking = await this.findOne(id, userId);
@@ -222,7 +245,7 @@ export class BookingService {
     if (booking.payment) {
       await this.prisma.payment.update({
         where: { bookingId: id },
-        data: { status: PaymentStatus.CANCELLED }
+        data: { status: PaymentStatus.CANCELLED },
       });
     }
 

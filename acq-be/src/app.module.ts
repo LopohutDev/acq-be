@@ -17,6 +17,7 @@ import { QuickFixModule } from './quick-fix/quick-fix.module';
 import { WebhookConfigModule } from './webhook-config/webhook-config.module';
 import { PlatformSettingsModule } from './platform-settings/platform-settings.module';
 import { GmailModule } from './gmail/gmail.module';
+import { EmailLogModule } from './email-log/email-log.module';
 // import { EmailModule } from './email/email.module';
 // import { PMOModule } from './pmo/pmo.module';
 // import { EmailAccountModule } from './email/email-account.module';
@@ -47,6 +48,7 @@ import { GmailModule } from './gmail/gmail.module';
     PaymentModule,
     PlatformSettingsModule,
     GmailModule,
+    EmailLogModule,
     // EmailModule,
     // PMOModule,
     // EmailAccountModule,

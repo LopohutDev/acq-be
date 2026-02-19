@@ -21,4 +21,24 @@ export class CreateBookingDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  vehiclePlateNumber: string;
+
+  @IsString()
+  @IsNotEmpty()
+  vehicleModel: string;
+
+  @IsString()
+  @IsNotEmpty()
+  vehicleColor: string;
+
+  @IsString()
+  @IsNotEmpty()
+  tower: string;
+
+  @IsString()
+  @IsNotEmpty()
+  unitNumber: string;
 }

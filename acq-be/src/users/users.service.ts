@@ -133,15 +133,17 @@ export class UsersService {
       .reduce((sum, booking) => sum + (booking.totalPrice || 0), 0);
 
     // Calculate profile completion
-    const profileFields = [user.firstName, user.lastName, user.phone, user.bio, user.profilePicture];
+    const profileFields = [
+      user.firstName,
+      user.lastName,
+      user.phone,
+      user.bio,
+      user.profilePicture,
+    ];
 
     const businessFields =
       user.userType === 'OWNER'
-        ? [
-            user.businessName,
-            user.businessAddress,
-            user.businessDescription,
-          ]
+        ? [user.businessName, user.businessAddress, user.businessDescription]
         : [];
 
     const allFields = [...profileFields, ...businessFields];

@@ -1,0 +1,39 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/acqua-park-backend:$SHORT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/acqua-park-backend:latest'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/acqua-park-backend:$SHORT_SHA'
+      - '--all-tags'
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'acqua-park-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/acqua-park-backend:$SHORT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-secrets'
+      - '/app/.env=acqua-park-backend-env:latest'
+      - '--port'
+      - '8080'
+
+images:
+  - 'gcr.io/$PROJECT_ID/acqua-park-backend:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/acqua-park-backend:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -5,6 +5,7 @@ import {
   Body,
   Param,
   Patch,
+  Query,
   UseGuards,
   Request,
   BadRequestException,
@@ -28,7 +29,15 @@ export class BookingController {
   }
 
   @Get()
-  findAll(@Request() req) {
+  async findAll(
+    @Request() req,
+    @Query('parkingSpotId') parkingSpotId?: string,
+  ) {
+    if (parkingSpotId) {
+      const bookings =
+        await this.bookingService.findByParkingSpot(parkingSpotId);
+      return { bookings };
+    }
     return this.bookingService.findAllByUser(req.user.id);
   }
 

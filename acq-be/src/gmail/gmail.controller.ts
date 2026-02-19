@@ -14,14 +14,38 @@ import {
 } from '@nestjs/common';
 import { type Response } from 'express';
 import { GmailService } from './gmail.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdatePmoEmailDto } from './dto/update-pmo-email.dto';
 import { SendPmoEmailDto } from './dto/send-pmo-email.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @Controller('gmail')
 export class GmailController {
   constructor(private readonly gmailService: GmailService) {}
 
+  // System Gmail Setup (Admin only)
+  @Get('system/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  getSystemStatus() {
+    return this.gmailService.getSystemGmailStatus();
+  }
+
+  @Get('system/connect')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  connectSystem() {
+    return { authUrl: this.gmailService.generateSystemAuthUrl() };
+  }
+
+  @Get('system/callback')
+  async systemCallback(@Query('code') code: string) {
+    return this.gmailService.handleSystemCallback(code);
+  }
+
+  // User Gmail Connection
   @Get('connect')
   @UseGuards(JwtAuthGuard)
   connect(@Request() req) {
@@ -29,14 +53,20 @@ export class GmailController {
   }
 
   @Get('callback')
-  async callback(@Query('code') code: string, @Query('state') userId: string, @Res() res: Response) {
+  async callback(
+    @Query('code') code: string,
+    @Query('state') userId: string,
+    @Res() res: Response,
+  ) {
     try {
       await this.gmailService.handleCallback(code, userId);
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
       return res.redirect(`${frontendUrl}/user/profile?gmail=connected`);
     } catch (error) {
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-      return res.redirect(`${frontendUrl}/user/profile?gmail=error&message=${encodeURIComponent(error.message)}`);
+      return res.redirect(
+        `${frontendUrl}/user/profile?gmail=error&message=${encodeURIComponent(error.message)}`,
+      );
     }
   }
 
@@ -56,7 +86,9 @@ export class GmailController {
   @UseGuards(JwtAuthGuard)
   updatePmoEmail(@Request() req, @Body() dto: UpdatePmoEmailDto) {
     if (process.env.NODE_ENV === 'production') {
-      throw new BadRequestException('PMO email configuration is not available in production');
+      throw new BadRequestException(
+        'PMO email configuration is not available in production',
+      );
     }
     return this.gmailService.updatePmoRecipientEmail(req.user.id, dto.pmoEmail);
   }

@@ -81,6 +81,7 @@ model User {
   parkingSpots ParkingSpot[]
   bookings Booking[]
   clientEmailAccounts ClientEmailAccount[]
+  emailLogs EmailLog[]
 
   @@map("users")
 }
@@ -115,6 +116,11 @@ model Booking {
   totalPrice Float @map("total_price")
   status BookingStatus @default(PENDING)
   notes String?
+  vehiclePlateNumber String? @map("vehicle_plate_number")
+  vehicleModel String? @map("vehicle_model")
+  vehicleColor String? @map("vehicle_color")
+  tower String?
+  unitNumber String? @map("unit_number")
   parkingSpotId String @map("parking_spot_id")
   userId String @map("user_id")
   parkingSpot ParkingSpot @relation(fields: [parkingSpotId], references: [id], onDelete: Cascade)
@@ -219,15 +225,24 @@ model EmailTemplate {
 
 model EmailLog {
   id String @id @default(uuid())
-  pmoAccountId String @map("pmo_account_id")
+  userId String? @map("user_id")
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pmoAccountId String? @map("pmo_account_id")
   templateId String? @map("template_id")
+  fromEmail String @map("from_email")
   recipientEmail String @map("recipient_email")
   subject String
+  body String?
   status EmailStatus @default(PENDING)
+  messageId String? @map("message_id")
   errorMessage String? @map("error_message")
   sentAt DateTime? @map("sent_at")
+  bookingId String? @map("booking_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
   @@map("email_logs")
 }
