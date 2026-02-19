@@ -2,19 +2,19 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
+ENV DATABASE_URL=$DATABASE_URL
+
 COPY package*.json ./
 COPY prisma ./prisma/
 
 RUN npm ci
 
+RUN npx prisma generate
+
 COPY . .
 
-ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
-ENV DATABASE_URL=$DATABASE_URL
-
 RUN npm run build
-
-RUN npx prisma generate
 
 FROM node:20-alpine AS runner
 
