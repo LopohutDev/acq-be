@@ -1,5 +1,26 @@
 steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'fetch-secrets'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud secrets versions access latest --secret=ACQPM-BE-ENV > acq-be/.env
+
+  - name: 'node:20-alpine'
+    id: 'migrate'
+    dir: 'acq-be'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        npm ci
+        npx prisma migrate deploy
+    waitFor: ['fetch-secrets']
+
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'build'
+    dir: 'acq-be'
     args:
       - 'build'
       - '-t'
@@ -7,14 +28,18 @@ steps:
       - '-t'
       - 'gcr.io/$PROJECT_ID/acqua-park-backend:latest'
       - '.'
+    waitFor: ['migrate']
 
   - name: 'gcr.io/cloud-builders/docker'
+    id: 'push'
     args:
       - 'push'
       - 'gcr.io/$PROJECT_ID/acqua-park-backend:$SHORT_SHA'
       - '--all-tags'
+    waitFor: ['build']
 
   - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy'
     args:
       - 'run'
       - 'deploy'
@@ -27,9 +52,10 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-secrets'
-      - '/app/.env=acqua-park-backend-env:latest'
+      - '/app/.env=ACQPM-BE-ENV:latest'
       - '--port'
       - '8080'
+    waitFor: ['push']
 
 images:
   - 'gcr.io/$PROJECT_ID/acqua-park-backend:$SHORT_SHA'
