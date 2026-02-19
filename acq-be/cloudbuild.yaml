@@ -52,7 +52,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-secrets'
-      - '/app/.env=ACQPM-BE-ENV:latest'
+      - '/secrets/.env=ACQPM-BE-ENV:latest'
       - '--port'
       - '8080'
     waitFor: ['push']
