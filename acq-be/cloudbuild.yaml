@@ -5,11 +5,11 @@ steps:
     args:
       - '-c'
       - |
-        gcloud secrets versions access latest --secret=ACQPM-BE-ENV > acq-be/.env
+        gcloud secrets versions access latest --secret=ACQPM-BE-ENV > acq-be/acq-be/.env
 
   - name: 'node:20-alpine'
     id: 'migrate'
-    dir: 'acq-be'
+    dir: 'acq-be/acq-be'
     entrypoint: 'sh'
     args:
       - '-c'
@@ -20,7 +20,7 @@ steps:
 
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build'
-    dir: 'acq-be'
+    dir: 'acq-be/acq-be'
     args:
       - 'build'
       - '-t'
