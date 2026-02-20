@@ -14,7 +14,10 @@ RUN npx prisma generate
 
 COPY . .
 
-RUN npm run build && ls -la dist/
+RUN npm run build
+
+# Debug: show what was built
+RUN ls -la dist/ && find dist -name "main.js"
 
 FROM node:20-alpine AS runner
 
@@ -30,8 +33,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
 
-RUN printf '#!/bin/sh\nset -a\n[ -f /secrets/.env ] && . /secrets/.env\nset +a\nexec node dist/main.js\n' > /app/start.sh && chmod +x /app/start.sh
-
 RUN chown -R nestjs:nodejs /app
 
 USER nestjs
@@ -40,4 +41,4 @@ EXPOSE 8080
 
 ENV PORT=8080
 
-CMD ["/app/start.sh"]
+CMD ["node", "dist/src/main.js"]
